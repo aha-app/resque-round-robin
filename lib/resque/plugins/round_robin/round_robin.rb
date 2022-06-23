@@ -17,12 +17,15 @@ module Resque::Plugins
     end
 
     def rotated_queues
+      @priority_order ||= @queues.map.with_index {|q, i| [q.chomp("*"), i] }.to_h
       @n ||= 0
       @n += 1
       rot_queues = queues # since we rely on the resque-dynamic-queues plugin, this is all the queues, expanded out
       if rot_queues.size > 0
         @n = @n % rot_queues.size
-        rot_queues.rotate(@n)
+        rot_queues.rotate(@n).sort_by do |queue|
+          @priority_order.find { |k, v| queue.start_with?(k) }&.last || @priority_order.size
+        end
       else
         rot_queues
       end
@@ -33,7 +36,7 @@ module Resque::Plugins
       # find the queuename, count it.
       busy_queues.select {|q| q == queuename }.size
     end
-    
+
     def queue_empty?(queuename)
       Resque.data_store.queue_size(queuename) == 0
     end
@@ -57,7 +60,7 @@ module Resque::Plugins
         Resque.data_store.remove_queue(queuename)
         return false
       end
-      
+
       cur_depth = queue_depth(queuename)
       max = max_qeueue_workers_for(queuename)
       return true if max == 0 # 0 means no limiting
