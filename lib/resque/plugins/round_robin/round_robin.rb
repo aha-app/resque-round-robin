@@ -24,7 +24,7 @@ module Resque::Plugins
       if rot_queues.size > 0
         @n = @n % rot_queues.size
         rot_queues.rotate(@n).sort_by do |queue|
-          @priority_order[queue.sub(/\d+$/, '')] || @priority_order.size
+          @priority_order.find { |k, v| queue.start_with?(k) }&.last || @priority_order.size
         end
       else
         rot_queues
