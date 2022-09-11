@@ -1,20 +1,21 @@
 require "spec_helper"
 
 describe "RoundRobin" do
-
   before(:each) do
-    Resque.redis.flushall
-    stub_const("ENV", { "QUEUES" => "q_*,r_*" })
+    Resque.redis.redis.flushall
+
+    5.times { |i| Resque::Job.create(:r_1, SomeJob, index: i) }
+    5.times { |i| Resque::Job.create(:q_1, SomeJob, index: i) }
+    5.times { |i| Resque::Job.create(:q_2, SomeJob, index: i) }
+
+    stub_const("ENV", env)
   end
 
-  context "a worker" do
+  let(:env) { { "QUEUES" => "q_*,r_*" } }
+  let(:worker) { Resque::Worker.new }
+
+  context "with default job forking" do
     it "switches queues, round robin" do
-      5.times { Resque::Job.create(:r_1, SomeJob) }
-      5.times { Resque::Job.create(:q_1, SomeJob) }
-      5.times { Resque::Job.create(:q_2, SomeJob) }
-
-      worker = Resque::Worker.new
-
       worker.process
       Resque.size(:q_1).should == 5
       Resque.size(:q_2).should == 4
@@ -34,12 +35,56 @@ describe "RoundRobin" do
       worker.process
       Resque.size(:r_1).should == 4
     end
+  end
 
-    it 'skips a queue that is being processed by another worker'
+  context "with multiple jobs per fork" do
+    before do
+      # There is code that depends on env vars being present when the plugin is
+      # included, so force a new include
+      Resque::Worker.send(:include, Resque::Plugins::RoundRobin)
+    end
+
+    let(:env) do
+      {
+        "QUEUES" => "q_*,r_*",
+        "JOBS_PER_FORK" => "4"
+      }
+    end
+
+    it "switches queues round robin, processing 4 jobs at a time" do
+      worker.process
+      expect(Resque.size(:q_2)).to eq(1)
+      expect(Resque.size(:q_1)).to eq(5)
+      expect(Resque.size(:r_1)).to eq(5)
+      expect(worker.job(true)).to be_empty
+
+      worker.process
+      expect(Resque.size(:q_2)).to eq(1)
+      expect(Resque.size(:q_1)).to eq(1)
+      expect(Resque.size(:r_1)).to eq(5)
+      expect(worker.job(true)).to be_empty
+
+      worker.process
+      expect(Resque.size(:q_2)).to eq(1)
+      expect(Resque.size(:q_1)).to eq(0)
+      expect(Resque.size(:r_1)).to eq(5)
+      expect(worker.job(true)).to be_empty
+
+      worker.process
+      expect(Resque.size(:q_2)).to eq(0)
+      expect(Resque.size(:q_1)).to eq(0)
+      expect(Resque.size(:r_1)).to eq(5)
+      expect(worker.job(true)).to be_empty
+
+      worker.process
+      expect(Resque.size(:q_2)).to eq(0)
+      expect(Resque.size(:q_1)).to eq(0)
+      expect(Resque.size(:r_1)).to eq(1)
+      expect(worker.job(true)).to be_empty
+    end
   end
 
   it "should pass lint" do
     Resque::Plugin.lint(Resque::Plugins::RoundRobin)
   end
-
 end

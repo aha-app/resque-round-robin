@@ -6,7 +6,7 @@ REDIS_CMD = "redis-server #{spec_dir}/redis-test.conf"
 
 puts "Starting redis for testing at localhost:9736..."
 puts `cd #{spec_dir}; #{REDIS_CMD}`
-Resque.redis = 'localhost:9736'
+Resque.redis = Redis.new(url: 'localhost:9736', inherit_socket: true)
 
 # Schedule the redis server for shutdown when tests are all finished.
 at_exit do
