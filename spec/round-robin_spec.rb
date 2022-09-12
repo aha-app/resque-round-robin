@@ -2,6 +2,9 @@ require "spec_helper"
 
 describe "RoundRobin" do
   before(:each) do
+    # Calling Resque.redis.redis looks weird, but it avoids a verbose
+    # warning at the beginning of each spec example, because the wrapper object
+    # returned by Resque.redis is namespaced, but the flushall command is not.
     Resque.redis.redis.flushall
 
     stub_const("ENV", env)
