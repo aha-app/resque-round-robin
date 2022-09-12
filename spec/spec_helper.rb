@@ -1,4 +1,8 @@
 require 'rspec'
+
+# This will force the gem to load with the jobs per fork logic enabled,
+# even though we are only executing one job at a time by default
+ENV["JOBS_PER_FORK"] = "1"
 require 'resque-round-robin'
 
 spec_dir = File.dirname(File.expand_path(__FILE__))
@@ -18,4 +22,3 @@ class SomeJob
   def self.perform(*args)
   end
 end
-

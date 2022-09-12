@@ -10,6 +10,9 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "resque", "~> 1.19"
   gem.add_dependency "resque-dynamic-queues"
+  # Newer versions of redis-rb break many different things for us
+  # Test carefully when relaxing this restriction
+  gem.add_dependency "redis", "<= 4.5"
 
   gem.add_development_dependency('rspec', '~> 2.5')
   gem.add_development_dependency('rack-test', '~> 0.5.4')

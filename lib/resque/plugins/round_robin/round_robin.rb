@@ -101,17 +101,19 @@ module Resque::Plugins
     end
 
     def perform_with_jobs_per_fork(job)
-      jobs_performed ||= 0
-      while jobs_performed < jobs_per_fork do
-        break if @shutdown
-        if jobs_performed == 0
-          perform_without_jobs_per_fork(job)
-        elsif another_job = reserve_from_last_queue
-          perform_without_jobs_per_fork(another_job)
-        else
-          break # No more work for this queue.
-        end
+      jobs_performed = 0
+      pending_job = job
+
+      loop do
+        break if @shutdown || pending_job.nil?
+
+        working_on(pending_job)
+        perform_without_jobs_per_fork(pending_job)
         jobs_performed += 1
+
+        break if jobs_performed >= jobs_per_fork
+
+        pending_job = reserve_from_last_queue
       end
     end
 
@@ -126,7 +128,5 @@ module Resque::Plugins
         end
       end
     end
-
   end # RoundRobin
 end # Resque::Plugins
-
