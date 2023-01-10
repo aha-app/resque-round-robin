@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "resque", "~> 1.19"
   gem.add_dependency "resque-dynamic-queues"
-  gem.add_dependency "redis", "<= 4.7.1"
+  gem.add_dependency "redis", "~> 4.7.1"
 
   gem.add_development_dependency('rspec', '~> 2.5')
   gem.add_development_dependency('rack-test', '~> 0.5.4')
