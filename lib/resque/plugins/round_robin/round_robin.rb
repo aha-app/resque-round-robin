@@ -20,7 +20,7 @@ module Resque::Plugins
       @priority_order ||= @queues.map.with_index {|q, i| [q.chomp("*"), i] }.to_h
       @n ||= 0
       @n += 1
-      rot_queues = queues # since we rely on the resque-dynamic-queues plugin, this is all the queues, expanded out
+      rot_queues = queues # since we rely on resque's dynamic queues functionality, this is all the queues, expanded out
       if rot_queues.size > 0
         @n = @n % rot_queues.size
         rot_queues.rotate(@n).sort_by do |queue|
