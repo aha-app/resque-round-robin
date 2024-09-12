@@ -3,9 +3,6 @@ Resque-round-robin
 
 A plugin for Resque that implements round-robin behavior for workers.
 
-resque-dynamic-queues is a pre-requisite, as is Resque 1.19 or higher
-(now tested up to 1.21)
-
 The standard behavior for Resque workers is to pull a job off a queue,
 and continue until the queue is empty.  Once empty, the worker moves
 on to the next queue (if available).
@@ -30,9 +27,10 @@ And then execute:
 
     $ bundle
 
+
 ## Usage
 
-Nothing special.  This gem monkey-patches things so this is automatic.
+Nothing special. This gem monkey-patches things so this is automatic.
 
 A potential TODO is to have the ability to disable the one-worker-per-queue
 policy on a dynamic basis.
